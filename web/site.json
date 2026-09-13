@@ -241,8 +241,8 @@
   },
   "limitations": [
     {
-      "zh": "回执证明写作过程存在且导出后未被篡改，不证明“没有使用 AI”；AI 协作会话在 Skill 模式下会被如实标记。",
-      "en": "A receipt proves the process existed and was not altered after export; it does not prove AI was unused. AI-assisted sessions are honestly labeled in skill mode."
+      "zh": "回执证明写作过程存在且导出后未被篡改，不证明“没有使用 AI”；AI 协作会话在 Skill 模式（m3 草稿，尚未在 agent 宿主上验证）下会被如实标记。",
+      "en": "A receipt proves the process existed and was not altered after export; it does not prove AI was unused. AI-assisted sessions are honestly labeled in skill mode (currently an unverified m3 draft)."
     },
     {
       "zh": "本地时间戳防不了“换钥匙整链重造”——密钥卡预登记（写作前发导师留档）是信任模型的关键环节。",
