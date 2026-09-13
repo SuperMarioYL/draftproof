@@ -29,3 +29,4 @@ GIT_AUTHOR_DRIFT.md
 .build_metadata*
 .stage_*
 _build_ctx.json
+bin/
