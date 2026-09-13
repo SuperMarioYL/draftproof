@@ -89,53 +89,55 @@ The commands and outputs below are copied verbatim from a real run on 2026-09-13
 
 ![watch captures writing, export emits the receipt, verify PASSes; after tampering one snapshot, verify FAILs and localizes the breakpoint](docs/demo-tamper-reject.gif)
 
-Recording script: [docs/demo.tape](docs/demo.tape) (vhs; re-renderable via [.github/workflows/demo.yml](.github/workflows/demo.yml)).
+Recording script: [docs/demo.tape](docs/demo.tape) (vhs; re-renderable via [.github/workflows/demo.yml](.github/workflows/demo.yml)). The GIF is a **separate recording** of the same flow — its temp dir, fingerprint and timestamps belong to that recording session, not to the same run as the text output below.
 
 ### Every save is captured
 
 ```text
-[draftproof] watch /tmp/draftproof-demo-s89dd1pe/thesis — 追踪 .docx/.md/.tex（任何编辑器的保存都会被捕获）
-[draftproof] 存证库 /tmp/draftproof-demo-s89dd1pe/thesis/.draftproof · 防抖 700ms · 作者指纹 sha256:3f088bb31a8c…
+[draftproof] watch /tmp/draftproof-demo-flzwc_40/thesis — 追踪 .docx/.md/.tex（任何编辑器的保存都会被捕获）
+[draftproof] 存证库 /tmp/draftproof-demo-flzwc_40/thesis/.draftproof · 防抖 700ms · 作者指纹 sha256:17801cd9d92f…
 [draftproof] 已有快照 0 个（0 个文档）；Ctrl-C 结束
 [draftproof] 捕获 thesis.md #1  71B  sha256:aee4d0ad8a0c…
 [draftproof] 捕获 thesis.md #2  110B  sha256:d2c00340d85f…
 [draftproof] 捕获 thesis.md #3  168B  sha256:bbcc21a62bc6…
 [draftproof] 捕获 thesis.md #4  204B  sha256:4ecc37485d74…
-[draftproof] 结束：本次新增 4 个快照，存证库 /tmp/draftproof-demo-s89dd1pe/thesis/.draftproof
+[draftproof] 结束：本次新增 4 个快照，存证库 /tmp/draftproof-demo-flzwc_40/thesis/.draftproof
 ```
 
 ### Reviewer check: intact → PASS
 
 ```text
-$ draftproof verify /tmp/draftproof-demo-s89dd1pe/receipt-20260913-105712.dpb
-回执 /tmp/draftproof-demo-s89dd1pe/receipt-20260913-105712.dpb
+$ bin/draftproof verify /tmp/draftproof-demo-flzwc_40/receipt-20260913-114626.dpb
+回执 /tmp/draftproof-demo-flzwc_40/receipt-20260913-114626.dpb
   文档     thesis.md（doc ce99f4e9a819…）
-  作者     公钥指纹 sha256:3f088bb31a8c55b7d7bbff21dfd584f0c8a7e0b2cd8653be8667d7ae49ee5913
-  范围     4 个快照 · 2026-09-13 10:53 → 2026-09-13 10:53（完整链）
+  作者     公钥指纹 sha256:17801cd9d92f05a0e40af2dcb47900b3a141e27331c87758c6bfe8b77d5d2486
+  范围     4 个快照 · 2026-09-13 11:46 → 2026-09-13 11:46（完整链）
   会话     1 个 · 跨度 3s · 累计增量 204 B
   签名     4/4 个快照 ed25519 签名有效
   哈希链   3/3 个链接逐环匹配
   回执签名 有效（覆盖全部快照与会话统计）
 PASS 整链未被篡改
-复核提示：与作者事前预登记的密钥卡指纹比对 sha256:3f088bb31a8c…
+复核提示：与作者事前预登记的密钥卡指纹比对 sha256:17801cd9d92f…
 ```
 
 ### Tamper one snapshot → FAIL + breakpoint
 
-Flip 8 hex characters of seq 2's `content_hash` (`python3 examples/tamper-receipt.py`) and verify again:
+The demo script then flips 8 hex characters of seq 2's `content_hash` (`python3 examples/tamper-receipt.py` is the standalone equivalent) and verifies again:
 
 ```text
-$ draftproof verify /tmp/draftproof-demo-s89dd1pe/receipt-20260913-105712.dpb
-回执 /tmp/draftproof-demo-s89dd1pe/receipt-20260913-105712.dpb
+$ 篡改快照 seq 2 的 content_hash：d2c00340d85f… -> deadbeef…
+
+$ bin/draftproof verify /tmp/draftproof-demo-flzwc_40/receipt-20260913-114626.dpb
+回执 /tmp/draftproof-demo-flzwc_40/receipt-20260913-114626.dpb
   文档     thesis.md（doc ce99f4e9a819…）
-  作者     公钥指纹 sha256:3f088bb31a8c55b7d7bbff21dfd584f0c8a7e0b2cd8653be8667d7ae49ee5913
-  范围     4 个快照 · 2026-09-13 10:53 → 2026-09-13 10:53（完整链）
+  作者     公钥指纹 sha256:17801cd9d92f05a0e40af2dcb47900b3a141e27331c87758c6bfe8b77d5d2486
+  范围     4 个快照 · 2026-09-13 11:46 → 2026-09-13 11:46（完整链）
   会话     1 个 · 跨度 3s · 累计增量 204 B
 FAIL 检测到篡改
   问题 回执整体：回执级 ed25519 签名无效——导出后有人改动过包内内容
   问题 快照 #2（seq 2）: ed25519 签名无效（记录被修改，或非作者密钥）
   问题 快照 #3（seq 3）: prev_hash 与上一快照的记录哈希不匹配——上一条记录被改动
-复核建议：向作者索取原始 .dpb；比对预登记密钥卡指纹 sha256:3f088bb31a8c…
+复核建议：向作者索取原始 .dpb；比对预登记密钥卡指纹 sha256:17801cd9d92f…
 ```
 
 <picture>
