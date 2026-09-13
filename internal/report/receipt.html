@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DraftProof 写作过程回执 · {{.Receipt.Doc.Path}}</title>
+<style>
+  :root { --ink:#1a1d21; --muted:#5b6470; --line:#d8dde3; --accent:#1a5fb4; --panel:#f6f8fa; }
+  * { box-sizing: border-box; }
+  body { font-family: "PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif;
+         color: var(--ink); margin: 0; padding: 32px 16px; background: #fff; line-height: 1.55; }
+  .page { max-width: 820px; margin: 0 auto; }
+  header { border-bottom: 3px solid var(--ink); padding-bottom: 14px; margin-bottom: 18px; }
+  header h1 { font-size: 21px; margin: 0 0 4px; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  h2 { font-size: 15px; margin: 22px 0 8px; padding-left: 8px; border-left: 4px solid var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
+  th { background: var(--panel); font-weight: 600; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .cards { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0 4px; }
+  .card { flex: 1 1 150px; border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; background: var(--panel); }
+  .card .v { font-size: 17px; font-weight: 700; }
+  .card .k { font-size: 11.5px; color: var(--muted); }
+  .mono { font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size: 11.5px; }
+  .meta { font-size: 12.5px; }
+  .meta td { border: none; padding: 2px 8px 2px 0; }
+  .meta td:first-child { color: var(--muted); width: 8em; }
+  .note { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; font-size: 12.5px; }
+  .note ul { margin: 6px 0 0; padding-left: 18px; }
+  .chart { width: 100%; height: auto; margin-top: 6px; }
+  footer { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 10px;
+           color: var(--muted); font-size: 11.5px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+  @media print {
+    body { padding: 0; font-size: 12px; }
+    .page { max-width: none; }
+    h2 { break-after: avoid; }
+    table { break-inside: auto; }
+    tr { break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <h1>DraftProof 写作过程回执</h1>
+  <div class="sub">本地签名 · 离线可验 · 不含任何草稿内容（仅哈希与元数据）</div>
+</header>
+
+<table class="meta">
+  <tr><td>文档</td><td>{{.Receipt.Doc.Path}} <span class="mono">（doc {{.DocIDShort}}）</span></td></tr>
+  <tr><td>写作跨度</td><td>{{.Receipt.Doc.FirstSavedAt.Format "2006-01-02 15:04"}} → {{.Receipt.Doc.LastSavedAt.Format "2006-01-02 15:04"}}</td></tr>
+  <tr><td>快照范围</td><td>{{if .IsFullChain}}完整链（自第一个快照起）{{else}}自 {{.Receipt.Since}} 起的连续子链{{end}} · 共 {{.Receipt.Doc.SnapshotCount}} 个</td></tr>
+  <tr><td>作者公钥指纹</td><td class="mono">sha256:{{.Receipt.Author.Fingerprint}}</td></tr>
+  <tr><td>导出时间</td><td>{{.GeneratedAt}}</td></tr>
+</table>
+
+<h2>写作过程摘要</h2>
+<div class="cards">
+  <div class="card"><div class="v">{{.Receipt.Stats.SnapshotCount}}</div><div class="k">保存快照</div></div>
+  <div class="card"><div class="v">{{.SpanText}}</div><div class="k">时间跨度</div></div>
+  <div class="card"><div class="v">{{.Receipt.Stats.SessionCount}}</div><div class="k">写作会话</div></div>
+  <div class="card"><div class="v">{{.TotalAddedText}}</div><div class="k">累计增量</div></div>
+  <div class="card"><div class="v">{{.MaxGapText}}</div><div class="k">最长间隔</div></div>
+</div>
+
+<h2>增量曲线（每次保存的正向字节增量）</h2>
+<svg class="chart" viewBox="0 0 {{.Chart.Width}} {{.Chart.Height}}" role="img" aria-label="每次保存的增量柱状图">
+  <line x1="0" y1="122" x2="{{.Chart.Width}}" y2="122" stroke="#d8dde3" stroke-width="1"></line>
+  {{range .Chart.Bars}}<rect x="{{printf "%.1f" .X}}" y="{{printf "%.1f" .Y}}" width="{{printf "%.1f" .W}}" height="{{printf "%.1f" .H}}" rx="1.5" fill="{{if .Positive}}#1a5fb4{{else}}#c01c28{{end}}" opacity="0.85"></rect>{{end}}
+</svg>
+<div class="sub" style="color:#5b6470;font-size:11.5px;margin-top:2px">横轴为快照顺序（每格一次保存），纵轴为该次保存相对上一版的字节增量；负增量（删改）以红色短柱表示。完整逐条数据见下方快照链。</div>
+
+<h2>写作会话</h2>
+<table>
+  <tr><th class="num">#</th><th>开始</th><th>结束</th><th class="num">时长</th><th class="num">快照</th><th class="num">增量</th></tr>
+  {{range .Sessions}}<tr>
+    <td class="num">{{.Index}}</td><td>{{.Start}}</td><td>{{.End}}</td>
+    <td class="num">{{.Duration}}</td><td class="num">{{.Snapshots}}</td><td class="num">{{.BytesAdded}}</td>
+  </tr>{{end}}
+</table>
+
+<h2>快照链（内容哈希，不含正文）</h2>
+<table>
+  <tr><th class="num">seq</th><th>保存时间</th><th class="num">大小</th><th class="num">增量</th><th>content_hash</th><th>prev_hash</th></tr>
+  {{range .Snapshots}}<tr>
+    <td class="num">{{.Seq}}</td><td>{{.SavedAt}}</td><td class="num">{{.Size}}</td><td class="num">{{.Delta}}</td>
+    <td class="mono">{{.ContentHash}}</td><td class="mono">{{.PrevHash}}</td>
+  </tr>{{end}}
+</table>
+
+<h2>复核方式（学位办 / 编辑部）</h2>
+<div class="note">
+  <p style="margin:0 0 6px">本回执由 DraftProof 在作者本机生成。复核只需同一命令行工具，离线运行，不需要安装、不需要联网、不接触作者草稿：</p>
+  <p class="mono" style="margin:0 0 6px">draftproof verify &lt;本回执.dpb 文件&gt;</p>
+  <ul>
+    <li>PASS 表示：包内全部快照签名有效、哈希链逐环匹配、统计与快照一致——导出后未被改动。</li>
+    <li>任何一处被改（哪怕一个时间戳或一个哈希字符），verify 即 FAIL 并指出断点位置。</li>
+    <li>请将作者<strong>事前预登记的密钥卡指纹</strong>与本页“作者公钥指纹”比对：一致才说明回执出自写作期间的那把钥匙。</li>
+  </ul>
+</div>
+
+<h2>信任边界（如实说明）</h2>
+<div class="note">
+  <ul>
+    <li>时间戳为作者本机时钟；工具同时记录单调时钟并在会话内检测墙钟回拨（verify 会提示）。</li>
+    <li>本回执证明的是<strong>写作过程存在、且导出后未被篡改</strong>，不证明“没有使用 AI”——AI 协作会话在 Agent Skill 模式下会被如实标记。</li>
+    <li>本地签名防不住“换钥匙整链重造”，因此密钥卡预登记（写作前发给导师留档）是本信任模型的关键环节。</li>
+    <li>docx 等格式按字节哈希记录，不解析内部结构；本页不含、也不传输任何草稿内容。</li>
+  </ul>
+</div>
+
+<footer>
+  <span>DraftProof {{.ToolVersion}} · {{.Schema}}</span>
+  <span>本页由作者本机离线生成 · 供申诉材料附件使用</span>
+</footer>
+
+</div>
+</body>
+</html>
