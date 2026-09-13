@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="680" viewBox="0 0 640 680" data-palette="bd56e6-e76ac8-c6acf6-ec25e87286c3" role="img" aria-labelledby="t d">
+<title id="t">DraftProof 架构</title><desc id="d">编辑器保存进入哈希链，export 生成回执，学位办离线 verify。</desc>
+<defs><linearGradient id="brand" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1000" y2="1"><stop stop-color="#a149c5"/><stop offset=".55" stop-color="#ab4f94"/><stop offset="1" stop-color="#796997"/></linearGradient><radialGradient id="halo"><stop stop-color="#a149c5" stop-opacity=".20"/><stop offset="1" stop-color="#fdf9fe" stop-opacity="0"/></radialGradient><filter id="glow" x="-60%%" y="-60%%" width="220%%" height="220%%"><feGaussianBlur stdDeviation="5"/></filter><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#ebcbf7" stroke-opacity=".35" stroke-width=".6"/></pattern><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="m1 1 7 4-7 4" fill="none" stroke="#a149c5" stroke-width="1.5"/></marker></defs>
+<style>text{font-family:Arial,'Noto Sans SC','PingFang Sans SC','PingFang SC','Microsoft YaHei',sans-serif}.mono{font-family:ui-monospace,Menlo,Consolas,monospace}.flow{stroke-dasharray:10 110;animation:flow 6s linear infinite}.pulse{animation:pulse 4.5s ease-in-out infinite}.drift{animation:drift 9s ease-in-out infinite alternate}.turn{transform-box:fill-box;transform-origin:center;animation:turn 80s linear infinite}.stage{animation:pulse 6s ease-in-out infinite}@keyframes flow{to{stroke-dashoffset:-360}}@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}@keyframes drift{to{transform:translate(6px,-8px)}}@keyframes turn{to{transform:rotate(360deg)}}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style><rect width="640" height="680" rx="16" fill="#fdf9fe"/>
+<rect width="640" height="680" rx="16" fill="url(#grid)"/>
+<text x="320" y="46" text-anchor="middle" font-size="12.5" letter-spacing="1" fill="#6a5e88">作者本机 · 离线</text>
+<rect x="122" y="60" width="396" height="34" rx="8" fill="#fcf7fe" stroke="#ebcbf7" stroke-width="1.2"/><text x="320" y="81" text-anchor="middle" font-size="12" fill="#211630">编辑器：Word · WPS · Typora · VS Code</text><path d="M320 98L320 122" fill="none" stroke="#a149c5" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M320 98L320 122" class="flow" fill="none" stroke="#ab4f94" stroke-width="2"/>
+<rect x="180" y="124" width="280" height="46" rx="10" fill="#fcf7fe" stroke="#ebcbf7" stroke-width="1.4"/>
+<text x="320" y="148" text-anchor="middle" font-size="13" font-weight="600" fill="#211630">draftproof watch</text>
+<text x="320" y="166" text-anchor="middle" font-size="11" fill="#6a5e88">fsnotify · 5s 防抖 · 去重</text>
+<path d="M320 174L320 198" fill="none" stroke="#a149c5" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M320 174L320 198" class="flow" fill="none" stroke="#ab4f94" stroke-width="2"/>
+<rect x="156" y="200" width="328" height="52" rx="10" fill="#fcf7fe" stroke="#ebcbf7" stroke-width="1.4"/>
+<text x="320" y="224" text-anchor="middle" font-size="12" font-weight="600" fill="#211630">.draftproof/chain.jsonl</text>
+<text x="320" y="242" text-anchor="middle" font-size="11" fill="#6a5e88">append-only 哈希链 · 逐条 ed25519</text>
+<rect x="180" y="262" width="280" height="36" rx="10" fill="#fcf7fe" stroke="#ebcbf7" stroke-width="1.4"/>
+<text x="320" y="284" text-anchor="middle" font-size="11" font-weight="600" fill="#211630">密钥 ~/.draftproof/author.key</text>
+<path d="M320 302L320 326" fill="none" stroke="#a149c5" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M320 302L320 326" class="flow" fill="none" stroke="#ab4f94" stroke-width="2"/>
+<text x="320" y="342" text-anchor="middle" font-size="12.5" letter-spacing="1" fill="#6a5e88">导出（误判当天）</text>
+<rect x="196" y="352" width="248" height="46" rx="10" fill="#fcf7fe" stroke="#ebcbf7" stroke-width="1.4"/>
+<text x="320" y="379" text-anchor="middle" font-size="13" font-weight="600" fill="#211630">draftproof export</text>
+<path d="M320 402L320 426" fill="none" stroke="#a149c5" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M320 402L320 426" class="flow" fill="none" stroke="#ab4f94" stroke-width="2"/>
+<rect x="180" y="428" width="140" height="40" rx="10" fill="#fcf7fe" stroke="#ebcbf7" stroke-width="1.4"/>
+<text x="250" y="452" text-anchor="middle" font-size="11" font-weight="600" fill="#211630">receipt.dpb</text>
+<text x="250" y="470" text-anchor="middle" font-size="11" fill="#6a5e88">验签包</text>
+<rect x="332" y="428" width="140" height="40" rx="10" fill="#fcf7fe" stroke="#ebcbf7" stroke-width="1.4"/>
+<text x="402" y="452" text-anchor="middle" font-size="11" font-weight="600" fill="#211630">receipt.html</text>
+<text x="402" y="470" text-anchor="middle" font-size="11" fill="#6a5e88">可打印时间线</text>
+<path d="M320 472L320 496" fill="none" stroke="#a149c5" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M320 472L320 496" class="flow" fill="none" stroke="#ab4f94" stroke-width="2"/>
+<text x="320" y="512" text-anchor="middle" font-size="12.5" letter-spacing="1" fill="#6a5e88">学位办 / 期刊编辑部 · 离线复核</text>
+<rect x="196" y="522" width="248" height="46" rx="10" fill="#fcf7fe" stroke="#ebcbf7" stroke-width="1.4"/>
+<text x="320" y="546" text-anchor="middle" font-size="12" font-weight="600" fill="#211630">draftproof verify</text>
+<text x="320" y="564" text-anchor="middle" font-size="11" fill="#6a5e88">同一二进制 · 零联网</text>
+<circle cx="238" cy="596" r="5" class="pulse" fill="#1a7f37"/><text x="252" y="601" font-size="12.5" fill="#211630">PASS 整链未被篡改</text>
+<circle cx="238" cy="624" r="5" class="pulse" style="animation-delay:1.2s" fill="#cf222e"/><text x="252" y="629" font-size="12.5" fill="#211630">FAIL 断点定位</text>
+<text x="320" y="664" text-anchor="middle" font-size="11" fill="#6a5e88">草稿、密钥与快照全部留在作者本机</text>
+</svg>

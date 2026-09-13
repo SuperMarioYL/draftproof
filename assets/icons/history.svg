@@ -1,0 +1,21 @@
+<!-- Icon from Tabler Icons (https://tabler.io), MIT License -->
+<!--
+tags: [search, see, past, card, website, history, control, operation, function, interface]
+category: System
+version: "1.7"
+unicode: "ebea"
+-->
+<svg data-palette="bd56e6-e76ac8-c6acf6-ec25e87286c3"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="#8b7fa6"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 8l0 4l2 2" />
+  <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5" />
+</svg>

@@ -1,0 +1,256 @@
+{
+  "schema": 3,
+  "name": "draftproof",
+  "github": "https://github.com/SuperMarioYL/draftproof",
+  "host": "draftproof.lei6393.com",
+  "palette": "auto",
+  "lang": {
+    "primary": "zh",
+    "toggle": true
+  },
+  "meta": {
+    "visual_profile": "neon-particle",
+    "content_version": "0.1.0",
+    "demo_source": "docs/demo-results.json"
+  },
+  "hero": {
+    "eyebrow": {
+      "zh": "本地签名、可离线验签的写作过程存证。",
+      "en": "Locally signed, offline-verifiable provenance for your writing process."
+    },
+    "headline": {
+      "zh": "被 AIGC 检测误判时，递出去的是可机器复核的写作过程回执。",
+      "en": "When a detector calls your writing AI-made, hand over a machine-checkable receipt."
+    },
+    "sub": {
+      "zh": "每次保存进入 ed25519 哈希链，草稿一个字节都不出本机；学位办用同一二进制离线验签：未动 PASS，改一个字符立即 FAIL。",
+      "en": "Every save joins an ed25519 hash chain and no draft byte ever leaves the machine; the degree office verifies offline with the same binary — PASS intact, FAIL on any edit."
+    },
+    "href": "#quickstart",
+    "cta": {
+      "zh": "运行示例",
+      "en": "Run the demo"
+    },
+    "ctaGithub": {
+      "zh": "查看源码",
+      "en": "View source"
+    }
+  },
+  "scene": {
+    "kind": "neon-graph",
+    "caption": {
+      "zh": "图示展示组件关系；实际输出见下方演示。",
+      "en": "An illustrative component scene; recorded output appears below."
+    },
+    "fallback": "/assets/presentation/hero-dark.svg",
+    "fallbackLight": "/assets/presentation/hero-light.svg"
+  },
+  "advantages": [
+    {
+      "title": {
+        "zh": "过程证据，不是概率分",
+        "en": "Process evidence, not a probability"
+      },
+      "body": {
+        "zh": "检测器给分数，humanizer 教你藏；DraftProof 输出密码学可验的写作过程证据。",
+        "en": "Detectors emit scores and humanizers teach evasion; DraftProof emits cryptographically verifiable process evidence."
+      }
+    },
+    {
+      "title": {
+        "zh": "草稿不出本机",
+        "en": "Drafts never leave the machine"
+      },
+      "body": {
+        "zh": "回执只含哈希与元数据；密钥与快照全部留在本地，零网络。",
+        "en": "Receipts carry hashes and metadata only; keys and snapshots stay local, zero network."
+      }
+    },
+    {
+      "title": {
+        "zh": "裁决侧一键复核",
+        "en": "One-command review"
+      },
+      "body": {
+        "zh": "学位办拿到 .dpb 后离线运行 draftproof verify，篡改即翻红并定位断点。",
+        "en": "The degree office runs draftproof verify offline; tampering flips it red with a breakpoint."
+      }
+    }
+  ],
+  "story": {
+    "intro": {
+      "title": {
+        "zh": "解决什么问题",
+        "en": "The task it solves"
+      },
+      "body": {
+        "zh": "知网/维普等 AIGC 检测的分数可能卡住答辩与发表，而“这论文是我自己写的”无法自证。DraftProof 把写作期间每次保存变成带时间戳的签名快照，把“我写了多久、改了多少版”变成第三方可独立复核的证据。",
+        "en": "A mandatory AIGC-detector score can block a defense or a submission, and \"I wrote this myself\" is unfalsifiable from the reviewer's side. DraftProof turns every save during writing into a signed, timestamped snapshot, making the process independently checkable."
+      }
+    },
+    "sections": [
+      {
+        "title": {
+          "zh": "从保存到回执",
+          "en": "From save to receipt"
+        },
+        "body": {
+          "zh": "watch 监听论文目录，任何编辑器的保存（防抖去重）都追加一条 ed25519 签名快照；export 打包 .dpb 回执与可打印 HTML 时间线；verify 离线复核，篡改即 FAIL 并定位断点。",
+          "en": "watch listens on the thesis directory and appends an ed25519-signed snapshot for every editor save (debounced, deduplicated); export bundles a .dpb receipt plus a printable HTML timeline; verify re-checks offline and localizes any tamper breakpoint."
+        },
+        "image": {
+          "light": "/assets/presentation/process-light.svg",
+          "dark": "/assets/presentation/process-dark.svg",
+          "alt": {
+            "zh": "四段流程：init 生成密钥卡并预登记；watch 捕获每次保存进哈希链；export 导出回执；verify 离线复核，篡改即 FAIL。",
+            "en": "Four stages: init issues the key card for pre-registration; watch captures each save into the hash chain; export emits the receipt; verify re-checks offline and fails on tampering."
+          },
+          "mobile": {
+            "light": "/assets/presentation/process-mobile-light.svg",
+            "dark": "/assets/presentation/process-mobile-dark.svg"
+          }
+        }
+      },
+      {
+        "title": {
+          "zh": "工作原理",
+          "en": "How it works"
+        },
+        "body": {
+          "zh": "单进程 Go 二进制，全程离线：fsnotify 捕获保存事件，快照（时间戳、字节哈希、大小、prev_hash）逐条 ed25519 签名后追加进 append-only 的 .draftproof/chain.jsonl；回执包再由作者密钥整体签名。",
+          "en": "A single offline Go binary: fsnotify catches saves; each snapshot (timestamps, byte hash, size, prev_hash) is ed25519-signed and appended to the append-only .draftproof/chain.jsonl; the receipt envelope is signed again by the author key."
+        },
+        "image": {
+          "light": "/assets/presentation/architecture-light.svg",
+          "dark": "/assets/presentation/architecture-dark.svg",
+          "alt": {
+            "zh": "作者本机：编辑器保存经 fsnotify 进入 append-only 哈希链；export 生成 .dpb 与 HTML；学位办侧同一二进制离线 verify。",
+            "en": "On the author's machine, editor saves flow through fsnotify into an append-only hash chain; export produces .dpb and HTML; the reviewer side verifies offline with the same binary."
+          },
+          "mobile": {
+            "light": "/assets/presentation/architecture-mobile-light.svg",
+            "dark": "/assets/presentation/architecture-mobile-dark.svg"
+          }
+        }
+      },
+      {
+        "title": {
+          "zh": "能力与边界",
+          "en": "Capabilities and boundaries"
+        },
+        "body": {
+          "zh": "按字节哈希记录 .docx/.md/.tex，不解析内部结构、不改写一个字；本地时间戳 + 单调时钟，密钥卡预登记对抗“换钥匙重造”；云端时间戳与区块链锚定明确不在 v0.1。",
+          "en": "Byte-hashed capture of .docx/.md/.tex without parsing or rewriting; local timestamps plus a monotonic clock, with key-card pre-registration against key-swap rebuilds; cloud timestamps and blockchain anchoring are explicitly out of v0.1."
+        },
+        "image": {
+          "light": "/assets/presentation/integrations-light.svg",
+          "dark": "/assets/presentation/integrations-dark.svg",
+          "alt": {
+            "zh": "中心是按字节哈希的快照链，环绕编辑器（Word/WPS/Typora/VS Code）、命令（init/watch/log/export/verify）、产物（.dpb/.html/密钥卡）与边界（仅本地、不上云）。",
+            "en": "The byte-hash snapshot chain sits at the center, ringed by editors (Word/WPS/Typora/VS Code), commands (init/watch/log/export/verify), artifacts (.dpb/.html/key card) and the boundary (local only, no cloud)."
+          },
+          "mobile": {
+            "light": "/assets/presentation/integrations-mobile-light.svg",
+            "dark": "/assets/presentation/integrations-mobile-dark.svg"
+          }
+        }
+      }
+    ],
+    "details": [
+      {
+        "title": {
+          "zh": "使用方式",
+          "en": "Usage"
+        },
+        "body": {
+          "zh": "作者端五条命令：init / watch / log / export / verify。作者端 CLI 与回执永久免费；裁决侧（学位办/期刊编辑部）的批量验签工作站是 v0.2+ 的付费方向。",
+          "en": "Five commands on the author side: init / watch / log / export / verify. The author CLI and receipts stay free; the reviewer-side batch verification workstation is the paid v0.2+ direction."
+        }
+      },
+      {
+        "title": {
+          "zh": "信任边界",
+          "en": "Trust boundary"
+        },
+        "body": {
+          "zh": "回执证明过程存在且导出后未被篡改，不证明“没有使用 AI”；本地时间戳防不了换钥匙整链重造，所以密钥卡要在写作前发给导师留档。",
+          "en": "A receipt proves the process existed and was not altered after export; it does not prove AI was unused. Local timestamps cannot stop a key-swap rebuild, which is why the key card must be pre-registered before writing."
+        }
+      }
+    ]
+  },
+  "demo": {
+    "title": {
+      "zh": "实际运行结果",
+      "en": "Actual demo output"
+    },
+    "note": {
+      "zh": "真实命令与输出，全程离线：捕获四次保存、导出回执、verify PASS，篡改一个快照后 verify FAIL 并定位断点。完整记录见 docs/demo-results.json。",
+      "en": "Real commands and output, fully offline: four saves captured, receipt exported, verify PASS, then one snapshot tampered and verify FAIL with a breakpoint. Full record in docs/demo-results.json."
+    },
+    "source": "https://github.com/SuperMarioYL/draftproof/blob/main/docs/demo-results.json",
+    "steps": [
+      {
+        "label": {
+          "zh": "篡改即翻红",
+          "en": "Tamper flips it red"
+        },
+        "body": {
+          "zh": "同一份回执：未动 → PASS；把 seq 2 的 content_hash 改 8 个字符 → 签名与链同时断裂，断点定位到具体快照。",
+          "en": "Same receipt: intact → PASS; flip 8 chars of seq 2's content_hash → signature and chain both break, with the breakpoint named."
+        },
+        "command": "DRAFTPROOF=bin/draftproof python3 examples/demo-tamper-reject.py",
+        "output": "演示目录 /tmp/draftproof-demo-s89dd1pe（HOME 已隔离，不触碰真实密钥与论文）\n\n$ bin/draftproof init\n已生成作者密钥：/tmp/draftproof-demo-s89dd1pe/home/.draftproof\n\nDraftProof 作者密钥卡（Author Key Card）\n--------------------------------------\n公钥指纹: sha256:fe85cb74a6b1a659dcd8acfe5299843151f6b1892bdfc96b0e67e83cdca16180\n生成时间: 2026-09-13 10:57:06 CST\n\n请尽早（最好在开始写作当天）把本卡拍照或转发给\n导师 / 同学留档（邮件、微信均可）。\n\n事后用新钥匙重造的整条回执链，无法匹配这张卡上\n事前登记的指纹——这是本地存证对抗伪造的关键。\n密钥保存在本机 ~/.draftproof/author.key，草稿与\n密钥都不出本机。\n\n密钥卡已保存到 /tmp/draftproof-demo-s89dd1pe/home/.draftproof/keycard.txt\n下一步：在论文目录运行 draftproof watch <目录>\n$ 保存第 1 版（71 B，任何编辑器的保存都会被捕获）\n$ 保存第 2 版（110 B，任何编辑器的保存都会被捕获）\n$ 保存第 3 版（168 B，任何编辑器的保存都会被捕获）\n$ 保存第 4 版（204 B，任何编辑器的保存都会被捕获）\n[draftproof] watch /tmp/draftproof-demo-s89dd1pe/thesis — 追踪 .docx/.md/.tex（任何编辑器的保存都会被捕获）\n[draftproof] 存证库 /tmp/draftproof-demo-s89dd1pe/thesis/.draftproof · 防抖 700ms · 作者指纹 sha256:fe85cb74a6b1…\n[draftproof] 已有快照 0 个（0 个文档）；Ctrl-C 结束\n[draftproof] 捕获 thesis.md #1  71B  sha256:aee4d0ad8a0c…\n[draftproof] 捕获 thesis.md #2  110B  sha256:d2c00340d85f…\n[draftproof] 捕获 thesis.md #3  168B  sha256:bbcc21a62bc6…\n[draftproof] 捕获 thesis.md #4  204B  sha256:4ecc37485d74…\n[draftproof] 结束：本次新增 4 个快照，存证库 /tmp/draftproof-demo-s89dd1pe/thesis/.draftproof\n$ bin/draftproof log /tmp/draftproof-demo-s89dd1pe/thesis\n写作时间线 · thesis.md（doc ce99f4e9a819…）\n  快照 4 · 2026-09-13 10:57 → 2026-09-13 10:57 · 跨度 3s · 会话 1\n\n  会话 1  09-13 10:57 → 09-13 10:57  3s      快照 4   增量 204 B\n\n  终稿大小 204 B · 首个快照 71 B\n$ bin/draftproof export /tmp/draftproof-demo-s89dd1pe/thesis --out /tmp/draftproof-demo-s89dd1pe\n导出回执 thesis.md（doc ce99f4e9a819…）\n  快照 4 · 会话 1 · 跨度 3s · 累计增量 204 B\n  作者公钥指纹 sha256:fe85cb74a6b1a659dcd8acfe5299843151f6b1892bdfc96b0e67e83cdca16180\n  写入 /tmp/draftproof-demo-s89dd1pe/receipt-20260913-105712.dpb\n  写入 /tmp/draftproof-demo-s89dd1pe/receipt-20260913-105712.html（可打印）\n\n把 .dpb 发给学位办/期刊编辑部；对方离线运行：draftproof verify <文件>.dpb\n提醒：确认导师已留档你的密钥卡指纹（draftproof init 可重看）。\n$ bin/draftproof verify /tmp/draftproof-demo-s89dd1pe/receipt-20260913-105712.dpb\n回执 /tmp/draftproof-demo-s89dd1pe/receipt-20260913-105712.dpb\n  文档     thesis.md（doc ce99f4e9a819…）\n  作者     公钥指纹 sha256:fe85cb74a6b1a659dcd8acfe5299843151f6b1892bdfc96b0e67e83cdca16180\n  范围     4 个快照 · 2026-09-13 10:57 → 2026-09-13 10:57（完整链）\n  会话     1 个 · 跨度 3s · 累计增量 204 B\n  签名     4/4 个快照 ed25519 签名有效\n  哈希链   3/3 个链接逐环匹配\n  回执签名 有效（覆盖全部快照与会话统计）\nPASS 整链未被篡改\n复核提示：与作者事前预登记的密钥卡指纹比对 sha256:fe85cb74a6b1…\n$ 篡改快照 seq 2 的 content_hash：d2c00340d85f… -> deadbeef…\n\n$ bin/draftproof verify /tmp/draftproof-demo-s89dd1pe/receipt-20260913-105712.dpb\n回执 /tmp/draftproof-demo-s89dd1pe/receipt-20260913-105712.dpb\n  文档     thesis.md（doc ce99f4e9a819…）\n  作者     公钥指纹 sha256:fe85cb74a6b1a659dcd8acfe5299843151f6b1892bdfc96b0e67e83cdca16180\n  范围     4 个快照 · 2026-09-13 10:57 → 2026-09-13 10:57（完整链）\n  会话     1 个 · 跨度 3s · 累计增量 204 B\nFAIL 检测到篡改\n  问题 回执整体：回执级 ed25519 签名无效——导出后有人改动过包内内容\n  问题 快照 #2（seq 2）: ed25519 签名无效（记录被修改，或非作者密钥）\n  问题 快照 #3（seq 3）: prev_hash 与上一快照的记录哈希不匹配——上一条记录被改动\n复核建议：向作者索取原始 .dpb；比对预登记密钥卡指纹 sha256:fe85cb74a6b1…\n\n演示结论：同一份回执，未动 -> PASS；改动任何一个快照 -> FAIL 并定位断点。\n（回执不含草稿内容；学位办复核只需 draftproof verify 这一个命令，离线运行。）",
+        "image": "/assets/presentation/demo-0-light.svg",
+        "imageDark": "/assets/presentation/demo-0-dark.svg"
+      }
+    ]
+  },
+  "quickstart": {
+    "title": {
+      "zh": "十分钟上手",
+      "en": "Ten-minute quickstart"
+    },
+    "body": {
+      "zh": "需要 Go 1.24+（或直接下载 Release 单文件二进制）。示例脚本在临时目录完成全流程，不触碰真实论文。",
+      "en": "Requires Go 1.24+ (or grab a single-binary release). The example runs the whole loop in a temp directory and never touches a real thesis."
+    },
+    "steps": [
+      {
+        "title": {
+          "zh": "安装",
+          "en": "Install"
+        },
+        "code": "git clone https://github.com/SuperMarioYL/draftproof.git\ncd draftproof\ngo build -o bin/draftproof ."
+      },
+      {
+        "title": {
+          "zh": "跑通篡改即翻红演示",
+          "en": "Run the tamper-reject demo"
+        },
+        "code": "DRAFTPROOF=bin/draftproof python3 examples/demo-tamper-reject.py"
+      },
+      {
+        "title": {
+          "zh": "挂到你自己的论文目录",
+          "en": "Point it at your own thesis"
+        },
+        "code": "draftproof init\ndraftproof watch ~/thesis"
+      }
+    ]
+  },
+  "limitations": [
+    {
+      "zh": "回执证明写作过程存在且导出后未被篡改，不证明“没有使用 AI”；AI 协作会话在 Skill 模式下会被如实标记。",
+      "en": "A receipt proves the process existed and was not altered after export; it does not prove AI was unused. AI-assisted sessions are honestly labeled in skill mode."
+    },
+    {
+      "zh": "本地时间戳防不了“换钥匙整链重造”——密钥卡预登记（写作前发导师留档）是信任模型的关键环节。",
+      "en": "Local timestamps cannot stop a key-swap rebuild — key-card pre-registration (sent to an advisor before writing) is the key mitigation."
+    }
+  ],
+  "footer": {
+    "tag": "0.1.0 · Go 1.24+ · MIT"
+  },
+  "content_version": "v0.1.0"
+}

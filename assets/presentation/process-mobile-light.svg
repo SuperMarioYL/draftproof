@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="660" viewBox="0 0 640 660" data-palette="bd56e6-e76ac8-c6acf6-ec25e87286c3" role="img" aria-labelledby="t d">
+<title id="t">DraftProof 核心流程</title><desc id="d">init、watch、export、verify 四步；篡改任何快照即 FAIL。</desc>
+<defs><linearGradient id="brand" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1000" y2="1"><stop stop-color="#a149c5"/><stop offset=".55" stop-color="#ab4f94"/><stop offset="1" stop-color="#796997"/></linearGradient><radialGradient id="halo"><stop stop-color="#a149c5" stop-opacity=".20"/><stop offset="1" stop-color="#fdf9fe" stop-opacity="0"/></radialGradient><filter id="glow" x="-60%%" y="-60%%" width="220%%" height="220%%"><feGaussianBlur stdDeviation="5"/></filter><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#ebcbf7" stroke-opacity=".35" stroke-width=".6"/></pattern><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="m1 1 7 4-7 4" fill="none" stroke="#a149c5" stroke-width="1.5"/></marker></defs>
+<style>text{font-family:Arial,'Noto Sans SC','PingFang Sans SC','PingFang SC','Microsoft YaHei',sans-serif}.mono{font-family:ui-monospace,Menlo,Consolas,monospace}.flow{stroke-dasharray:10 110;animation:flow 6s linear infinite}.pulse{animation:pulse 4.5s ease-in-out infinite}.drift{animation:drift 9s ease-in-out infinite alternate}.turn{transform-box:fill-box;transform-origin:center;animation:turn 80s linear infinite}.stage{animation:pulse 6s ease-in-out infinite}@keyframes flow{to{stroke-dashoffset:-360}}@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}@keyframes drift{to{transform:translate(6px,-8px)}}@keyframes turn{to{transform:rotate(360deg)}}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style><rect width="640" height="660" rx="16" fill="#fdf9fe"/>
+<rect width="640" height="660" rx="16" fill="url(#grid)"/>
+<rect x="60" y="48" width="520" height="104" rx="12" fill="#fcf7fe" stroke="#ebcbf7" stroke-width="1.4"/>
+<circle class="stage" style="animation-delay:0.0s" cx="106" cy="100" r="17" fill="none" stroke="#a149c5" stroke-width="1.6"/>
+<text x="106" y="105" text-anchor="middle" font-size="13" font-weight="700" fill="#a149c5">01</text>
+<text x="140" y="92" font-size="16" font-weight="700" fill="#211630">init</text>
+<text x="140" y="116" font-size="11.5" fill="#6a5e88">生成 ed25519 密钥 · 密钥卡发导师预登记</text>
+<path d="M320 156L320 180" fill="none" stroke="#a149c5" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M320 156L320 180" class="flow" fill="none" stroke="#ab4f94" stroke-width="2"/>
+<rect x="60" y="184" width="520" height="104" rx="12" fill="#fcf7fe" stroke="#ebcbf7" stroke-width="1.4"/>
+<circle class="stage" style="animation-delay:1.5s" cx="106" cy="236" r="17" fill="none" stroke="#a149c5" stroke-width="1.6"/>
+<text x="106" y="241" text-anchor="middle" font-size="13" font-weight="700" fill="#a149c5">02</text>
+<text x="140" y="228" font-size="16" font-weight="700" fill="#211630">watch</text>
+<text x="140" y="252" font-size="11.5" fill="#6a5e88">每次保存追加签名快照 · 写作零感知</text>
+<path d="M320 292L320 316" fill="none" stroke="#a149c5" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M320 292L320 316" class="flow" fill="none" stroke="#ab4f94" stroke-width="2"/>
+<rect x="60" y="320" width="520" height="104" rx="12" fill="#fcf7fe" stroke="#ebcbf7" stroke-width="1.4"/>
+<circle class="stage" style="animation-delay:3.0s" cx="106" cy="372" r="17" fill="none" stroke="#a149c5" stroke-width="1.6"/>
+<text x="106" y="377" text-anchor="middle" font-size="13" font-weight="700" fill="#a149c5">03</text>
+<text x="140" y="364" font-size="16" font-weight="700" fill="#211630">export</text>
+<text x="140" y="388" font-size="11.5" fill="#6a5e88">误判当天：.dpb + 可打印 HTML 时间线</text>
+<path d="M320 428L320 452" fill="none" stroke="#a149c5" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M320 428L320 452" class="flow" fill="none" stroke="#ab4f94" stroke-width="2"/>
+<rect x="60" y="456" width="520" height="104" rx="12" fill="#fcf7fe" stroke="#ebcbf7" stroke-width="1.4"/>
+<circle class="stage" style="animation-delay:4.5s" cx="106" cy="508" r="17" fill="none" stroke="#a149c5" stroke-width="1.6"/>
+<text x="106" y="513" text-anchor="middle" font-size="13" font-weight="700" fill="#a149c5">04</text>
+<text x="140" y="500" font-size="16" font-weight="700" fill="#211630">verify</text>
+<text x="140" y="524" font-size="11.5" fill="#6a5e88">学位办离线复核：PASS / FAIL + 断点定位</text>
+<rect x="96" y="606" width="200" height="34" rx="8" fill="#fcf7fe" stroke="#1a7f37" stroke-width="1.2"/><text x="196" y="627" text-anchor="middle" font-size="12" fill="#211630">未动 → PASS</text><rect x="344" y="606" width="200" height="34" rx="8" fill="#fcf7fe" stroke="#cf222e" stroke-width="1.2"/><text x="444" y="627" text-anchor="middle" font-size="12" fill="#211630">篡改 → FAIL + 断点</text></svg>
