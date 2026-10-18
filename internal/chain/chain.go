@@ -128,9 +128,23 @@ func LoadKeys(dir string) (*AuthorKeys, error) {
 // LoadOrCreateKeys returns the key pair in dir, generating and persisting a
 // new one (plus a printable key card) when absent. The bool reports whether
 // a new key was created.
+//
+// An existing author.key that fails to load is an error, never a trigger for
+// rekeying: overwriting it would silently replace the author identity whose
+// fingerprint the advisor pre-registered — every earlier snapshot would
+// become unexportable with no warning.
 func LoadOrCreateKeys(dir string) (*AuthorKeys, bool, error) {
-	if k, err := LoadKeys(dir); err == nil {
+	keyPath := filepath.Join(dir, "author.key")
+	if _, err := os.Stat(keyPath); err == nil {
+		k, err := LoadKeys(dir)
+		if err != nil {
+			return nil, false, fmt.Errorf(
+				"已存在的 %s 无法读取（文件损坏？）——拒绝覆盖以保护预登记的作者指纹，请手工恢复或移动该文件后再运行 init: %w",
+				keyPath, err)
+		}
 		return k, false, nil
+	} else if !os.IsNotExist(err) {
+		return nil, false, err
 	}
 	pub, priv, err := ed25519.GenerateKey(nil)
 	if err != nil {

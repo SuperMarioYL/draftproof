@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -74,6 +75,32 @@ func TestKeysRoundtripAndFingerprint(t *testing.T) {
 	}
 	if !strings.Contains(card, "导师") {
 		t.Fatal("key card must tell the author to pre-register with an advisor")
+	}
+}
+
+// Regression: a corrupt author.key used to be silently replaced by a fresh
+// key on LoadOrCreateKeys, destroying the pre-registered author identity.
+func TestLoadOrCreateKeysRefusesToOverwriteCorruptKey(t *testing.T) {
+	dir := t.TempDir()
+	keyPath := filepath.Join(dir, "author.key")
+	corrupt := "not-valid-hex-at-all\n"
+	if err := os.WriteFile(keyPath, []byte(corrupt), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	k, created, err := LoadOrCreateKeys(dir)
+	if err == nil || k != nil || created {
+		t.Fatalf("corrupt author.key must fail without rekeying, got keys=%v created=%v err=%v", k, created, err)
+	}
+	raw, err := os.ReadFile(keyPath)
+	if err != nil || string(raw) != corrupt {
+		t.Fatalf("corrupt key file must be left untouched: raw=%q err=%v", raw, err)
+	}
+	// Valid hex but wrong length (truncated write) is the same refusal.
+	if err := os.WriteFile(keyPath, []byte("abcd\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := LoadOrCreateKeys(dir); err == nil {
+		t.Fatal("truncated key file must also be refused")
 	}
 }
 
