@@ -9,7 +9,7 @@
 **本地签名的写作过程存证：每次保存进入 ed25519 哈希链，被 AIGC 检测误判时，递出一份可离线验签的写作过程回执。**
 
 [![CI](https://github.com/SuperMarioYL/draftproof/actions/workflows/ci.yml/badge.svg)](https://github.com/SuperMarioYL/draftproof/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.1.0-A149C5)](https://github.com/SuperMarioYL/draftproof/releases)
+[![Version](https://img.shields.io/badge/version-0.2.0-A149C5)](https://github.com/SuperMarioYL/draftproof/releases)
 [![Go](https://img.shields.io/badge/go-1.24%2B-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-A149C5)](./LICENSE)
 [![Platform](https://img.shields.io/badge/platform-win%20%7C%20macOS%20%7C%20linux-7d8590)](https://github.com/SuperMarioYL/draftproof/releases)

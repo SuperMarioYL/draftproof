@@ -9,7 +9,7 @@
 **Locally signed writing-process provenance: every save joins an ed25519 hash chain, so when an AIGC detector flags your paper, you hand over a receipt that can be verified offline.**
 
 [![CI](https://github.com/SuperMarioYL/draftproof/actions/workflows/ci.yml/badge.svg)](https://github.com/SuperMarioYL/draftproof/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.1.0-A149C5)](https://github.com/SuperMarioYL/draftproof/releases)
+[![Version](https://img.shields.io/badge/version-0.2.0-A149C5)](https://github.com/SuperMarioYL/draftproof/releases)
 [![Go](https://img.shields.io/badge/go-1.24%2B-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-A149C5)](./LICENSE)
 [![Platform](https://img.shields.io/badge/platform-win%20%7C%20macOS%20%7C%20linux-7d8590)](https://github.com/SuperMarioYL/draftproof/releases)

@@ -1,7 +1,7 @@
 ---
 name: draftproof
 description: 本地签名的写作过程存证（provenance）。在写作会话中记录每次保存的 ed25519 签名哈希链快照，被 AIGC 检测误判时导出可离线验签的回执。与「消除 AI 痕迹」类 skill 相反：只如实记录，不改写一个字，AI 协作的段落会被诚实标记。
-version: 0.1.0-draft
+version: 0.2.0-draft
 license: MIT
 ---
 
