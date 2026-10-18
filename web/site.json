@@ -10,7 +10,7 @@
   },
   "meta": {
     "visual_profile": "neon-particle",
-    "content_version": "0.1.0",
+    "content_version": "0.2.0",
     "demo_source": "docs/demo-results.json"
   },
   "hero": {
@@ -250,7 +250,7 @@
     }
   ],
   "footer": {
-    "tag": "0.1.0 · Go 1.24+ · MIT"
+    "tag": "0.2.0 · Go 1.24+ · MIT"
   },
-  "content_version": "v0.1.0"
+  "content_version": "v0.2.0"
 }
