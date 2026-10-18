@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -225,6 +227,60 @@ func TestWatchCapturesRealSaves(t *testing.T) {
 	// store writes themselves must not be captured (no .jsonl matches)
 	if all[0].ContentHash == all[1].ContentHash {
 		t.Fatal("two different saves must produce different content hashes")
+	}
+}
+
+// Regression: a save scheduled just before shutdown used to be silently
+// dropped, and its debounce timer could panic sending on the closed capture
+// channel. The shutdown path must flush the pending save onto the chain.
+func TestShutdownFlushesPendingSave(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	thesis := t.TempDir()
+
+	if err := NewInitCmd().Execute(); err != nil {
+		t.Fatal(err)
+	}
+	keys, err := chain.LoadKeys(filepath.Join(home, ".draftproof"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	st, err := store.Open(thesis)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w, err := newWatcher(thesis, st, keys, 5*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := filepath.Join(thesis, "final.md")
+	if err := os.WriteFile(doc, []byte("最后一版，停 watch 前保存\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	w.schedule(doc) // debounce still pending when shutdown arrives
+	time.Sleep(50 * time.Millisecond)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- w.runWatch(ctx, io.Discard) }()
+	time.Sleep(100 * time.Millisecond) // let the loop come up
+	cancel()
+	if err := <-done; err != nil {
+		t.Fatalf("shutdown must end cleanly: %v", err)
+	}
+
+	all, err := st.LoadAll()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(all) != 1 {
+		t.Fatalf("shutdown must flush the pending save onto the chain, got %d snapshots", len(all))
+	}
+	if all[0].Path != "final.md" {
+		t.Fatalf("unexpected path %q", all[0].Path)
+	}
+	if err := chain.VerifySnapshot(all[0], keys.Public); err != nil {
+		t.Fatalf("flushed snapshot does not verify: %v", err)
 	}
 }
 

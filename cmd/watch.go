@@ -40,9 +40,10 @@ func eligible(name string) bool {
 }
 
 // watcher captures qualifying saves under one directory into the store.
-// All captures run on a single goroutine fed by captureCh, so chain-head
-// state needs no locking; only the debounce timer table is shared with the
-// fsnotify loop and is guarded by mu.
+// All captures run on the fsnotify loop goroutine, so chain-head state needs
+// no locking. The debounce timer table is the only shared state: timers fire
+// on their own goroutine and, under pendingMu, move their path into the
+// ready set and wake the loop — they never capture directly.
 type watcher struct {
 	dir          string
 	st           *store.Store
@@ -51,9 +52,11 @@ type watcher struct {
 	debounce     time.Duration
 	processStart time.Time
 
-	captureCh chan string
-	mu        sync.Mutex
+	pendingMu sync.Mutex
+	stopped   bool // set by stopPending: fired timers must not re-arm ready
 	timers    map[string]*time.Timer
+	ready     map[string]bool
+	wake      chan struct{} // 1-buffered; never closed, sends never block
 	captured  int64
 }
 
@@ -69,21 +72,66 @@ func newWatcher(dir string, st *store.Store, keys *chain.AuthorKeys, debounce ti
 	return &watcher{
 		dir: dir, st: st, keys: keys, heads: heads, debounce: debounce,
 		processStart: time.Now(),
-		captureCh:    make(chan string, 64),
 		timers:       make(map[string]*time.Timer),
+		ready:        make(map[string]bool),
+		wake:         make(chan struct{}, 1),
 	}, nil
 }
 
 // schedule (re)arms the per-path debounce timer.
 func (w *watcher) schedule(absPath string) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.pendingMu.Lock()
+	defer w.pendingMu.Unlock()
 	if t, ok := w.timers[absPath]; ok {
 		t.Stop()
 	}
 	w.timers[absPath] = time.AfterFunc(w.debounce, func() {
-		w.captureCh <- absPath
+		w.pendingMu.Lock()
+		if w.stopped {
+			w.pendingMu.Unlock()
+			return
+		}
+		delete(w.timers, absPath)
+		w.ready[absPath] = true
+		w.pendingMu.Unlock()
+		select {
+		case w.wake <- struct{}{}:
+		default:
+		}
 	})
+}
+
+// takeReady swaps out and returns the set of paths whose debounce elapsed.
+func (w *watcher) takeReady() []string {
+	w.pendingMu.Lock()
+	defer w.pendingMu.Unlock()
+	paths := make([]string, 0, len(w.ready))
+	for path := range w.ready {
+		paths = append(paths, path)
+	}
+	w.ready = make(map[string]bool)
+	return paths
+}
+
+// stopPending cancels every armed debounce timer and returns the paths they
+// were holding plus any path already sitting in ready. It sets stopped, so a
+// timer callback racing with the shutdown can no longer re-arm ready — the
+// returned set is exactly what has not been captured yet. Shutdown only.
+func (w *watcher) stopPending() []string {
+	w.pendingMu.Lock()
+	defer w.pendingMu.Unlock()
+	w.stopped = true
+	paths := make([]string, 0, len(w.timers)+len(w.ready))
+	for path, t := range w.timers {
+		t.Stop()
+		paths = append(paths, path)
+	}
+	w.timers = make(map[string]*time.Timer)
+	for path := range w.ready {
+		paths = append(paths, path)
+	}
+	w.ready = make(map[string]bool)
+	return paths
 }
 
 // capture reads the settled file and appends a signed snapshot, or skips it
@@ -157,20 +205,6 @@ func (w *watcher) runWatch(ctx context.Context, out io.Writer) error {
 		return err
 	}
 
-	captureDone := make(chan struct{})
-	go func() {
-		defer close(captureDone)
-		for path := range w.captureCh {
-			if err := w.capture(path); err != nil {
-				fmt.Fprintf(os.Stderr, "[draftproof] %v\n", err)
-			}
-		}
-	}()
-	defer func() {
-		close(w.captureCh)
-		<-captureDone
-	}()
-
 	fmt.Fprintf(out, "[draftproof] watch %s — 追踪 .docx/.md/.tex（任何编辑器的保存都会被捕获）\n", w.dir)
 	fmt.Fprintf(out, "[draftproof] 存证库 %s · 防抖 %s · 作者指纹 sha256:%s…\n",
 		w.st.Dir(), w.debounce, chain.Fingerprint(w.keys.Public)[:12])
@@ -180,6 +214,12 @@ func (w *watcher) runWatch(ctx context.Context, out io.Writer) error {
 	for {
 		select {
 		case <-ctx.Done():
+			// Final flush: paths still inside their debounce window must land
+			// on the chain — the last save before Ctrl-C is exactly the
+			// version the author needs. stopPending guarantees no timer
+			// callback can re-arm ready afterwards; captures stay on this
+			// goroutine, so nothing races with the chain head.
+			w.capturePaths(w.stopPending())
 			fmt.Fprintf(out, "[draftproof] 结束：本次新增 %d 个快照，存证库 %s\n",
 				atomic.LoadInt64(&w.captured), w.st.Dir())
 			return nil
@@ -188,6 +228,8 @@ func (w *watcher) runWatch(ctx context.Context, out io.Writer) error {
 				return nil
 			}
 			fmt.Fprintf(os.Stderr, "[draftproof] watch 错误: %v\n", err)
+		case <-w.wake:
+			w.capturePaths(w.takeReady())
 		case ev, ok := <-fw.Events:
 			if !ok {
 				return nil
@@ -205,6 +247,16 @@ func (w *watcher) runWatch(ctx context.Context, out io.Writer) error {
 				continue
 			}
 			w.schedule(ev.Name)
+		}
+	}
+}
+
+// capturePaths captures the given paths, reporting per-file failures without
+// stopping the rest.
+func (w *watcher) capturePaths(paths []string) {
+	for _, path := range paths {
+		if err := w.capture(path); err != nil {
+			fmt.Fprintf(os.Stderr, "[draftproof] %v\n", err)
 		}
 	}
 }
