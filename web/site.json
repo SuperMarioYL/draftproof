@@ -10,7 +10,8 @@
   },
   "meta": {
     "visual_profile": "neon-particle",
-    "content_version": "0.2.0",
+    "content_version": "0.3.0",
+    "generated_at": "2026-11-22",
     "demo_source": "docs/demo-results.json"
   },
   "hero": {
@@ -117,8 +118,8 @@
           "en": "How it works"
         },
         "body": {
-          "zh": "单进程 Go 二进制，全程离线：fsnotify 捕获保存事件，快照（时间戳、字节哈希、大小、prev_hash）逐条 ed25519 签名后追加进 append-only 的 .draftproof/chain.jsonl；回执包再由作者密钥整体签名。",
-          "en": "A single offline Go binary: fsnotify catches saves; each snapshot (timestamps, byte hash, size, prev_hash) is ed25519-signed and appended to the append-only .draftproof/chain.jsonl; the receipt envelope is signed again by the author key."
+          "zh": "单进程 Go 二进制，全程离线：fsnotify 捕获保存事件，快照（时间戳、字节哈希、大小、prev_hash）逐条 ed25519 签名后追加进 append-only 的 .draftproof/chain.jsonl；回执包再由作者密钥整体签名；导出前先校验整条哈希链，verify 再由快照重算文档范围与统计，空回执或自相矛盾的回执一律 FAIL。",
+          "en": "A single offline Go binary: fsnotify catches saves; each snapshot (timestamps, byte hash, size, prev_hash) is ed25519-signed and appended to the append-only .draftproof/chain.jsonl; the receipt envelope is signed again by the author key. Export validates the whole hash chain before signing, and verify re-derives the document range and stats from the snapshots, so an empty or self-contradictory receipt always FAILs."
         },
         "image": {
           "light": "/assets/presentation/architecture-light.svg",
@@ -250,7 +251,7 @@
     }
   ],
   "footer": {
-    "tag": "0.2.0 · Go 1.24+ · MIT"
+    "tag": "0.3.0 · Go 1.24+ · MIT"
   },
-  "content_version": "v0.2.0"
+  "content_version": "v0.3.0"
 }

@@ -11,7 +11,7 @@ import (
 )
 
 // version is set at build time by goreleaser (-X main.version).
-var version = "0.2.0"
+var version = "0.3.0"
 
 func main() {
 	root := cmd.NewRootCmd(version)

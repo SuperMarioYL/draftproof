@@ -9,7 +9,7 @@
 **本地签名的写作过程存证：每次保存进入 ed25519 哈希链，被 AIGC 检测误判时，递出一份可离线验签的写作过程回执。**
 
 [![CI](https://github.com/SuperMarioYL/draftproof/actions/workflows/ci.yml/badge.svg)](https://github.com/SuperMarioYL/draftproof/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.2.0-A149C5)](https://github.com/SuperMarioYL/draftproof/releases)
+[![Version](https://img.shields.io/badge/version-0.3.0-A149C5)](https://github.com/SuperMarioYL/draftproof/releases)
 [![Go](https://img.shields.io/badge/go-1.24%2B-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-A149C5)](./LICENSE)
 [![Platform](https://img.shields.io/badge/platform-win%20%7C%20macOS%20%7C%20linux-7d8590)](https://github.com/SuperMarioYL/draftproof/releases)
@@ -39,7 +39,7 @@ DraftProof 补上中间缺失的一层：**provenance（过程存证）**。
 - **被误判当天**：`draftproof export` 导出 `receipt-*.dpb` 回执包 + 一页可打印的写作时间线 HTML。
 - **裁决侧**：学位办/期刊编辑部收到 .dpb 后，用同一二进制离线运行 `draftproof verify`——PASS 即整链未被篡改；改动任何一个快照、时间戳甚至一个哈希字符，立即 FAIL 并定位断点。
 
-如实说明边界：回执证明的是**写作过程存在、且导出后未被篡改**，不证明「没有使用 AI」——AI 协作会话在 Agent Skill 模式下会被如实标记（见[申诉材料包](#-申诉材料包m3-预览)）。取证工具必须免费才可信：作者端 CLI 与回执永久免费开源，商业化在裁决侧（见[定价](#-定价)）。
+如实说明边界：回执证明的是**写作过程存在、且导出后未被篡改**，不证明「没有使用 AI」——AI 协作会话在 Agent Skill 模式下会被如实标记（见[申诉材料包](#-申诉材料包草稿)）。取证工具必须免费才可信：作者端 CLI 与回执永久免费开源，商业化在裁决侧（见[定价](#-定价)）。
 
 ## <img src="assets/icons/schema.svg" width="22" alt=""> 架构
 
@@ -81,7 +81,7 @@ draftproof export ~/thesis   # 需要申诉时：导出 .dpb + 可打印 HTML
 draftproof verify receipt-*.dpb   # 学位办侧：离线复核，零安装零联网
 ```
 
-以上五条命令就是 v0.1 的全部接口。`examples/demo-tamper-reject.py` 会自动创建一份示例论文（`thesis.md`，四版保存），无需准备任何输入。
+以上五条命令就是当前版本的全部接口。`examples/demo-tamper-reject.py` 会自动创建一份示例论文（`thesis.md`，四版保存），无需准备任何输入。
 
 ## <img src="assets/icons/video.svg" width="22" alt=""> 实际 Demo
 
@@ -160,8 +160,8 @@ FAIL 检测到篡改
 
 - **本地时间戳防不了「换钥匙整链重造」**——所以 `init` 即出密钥卡，要求写作当天就把指纹发给导师/同学留档。回执与密钥卡指纹对不上，存证即失效。
 - **PASS ≠ 没用 AI**——回执证明过程存在且未篡改；AI 协作会话应被如实标记，检测方拿到的是更可信的输入，不是洗白工具。
-- **docx 等压缩容器按字节哈希、不解析内部**——.md/.tex 纯文本草稿的逐版可读 diff 不在 v0.1 范围。
-- **单机单作者**：多设备同步、团队签名、移动端、浏览器扩展都不在 v0.1。
+- **docx 等压缩容器按字节哈希、不解析内部**——.md/.tex 纯文本草稿的逐版可读 diff 不在当前版本范围。
+- **单机单作者**：多设备同步、团队签名、移动端、浏览器扩展都不在当前版本。
 
 <picture>
   <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="assets/presentation/integrations-mobile-dark.svg">
@@ -170,11 +170,11 @@ FAIL 检测到篡改
   <img src="assets/presentation/integrations-light.svg" width="960" alt="中心是按字节哈希的 append-only 快照链，环绕编辑器（Word/WPS/Typora/VS Code）、格式（docx/md/tex）、命令（init/watch/log/export/verify）、产物（.dpb/receipt.html/密钥卡）与边界（仅本地、不上云，RFC 3161 属于 roadmap）。">
 </picture>
 
-明确不在 v0.1 的方向：编辑器插件（文件夹级 watch 已覆盖任何编辑器）、云端备份 / RFC 3161 远程时间戳 / 区块链锚定（未发表草稿不许上云）、AI 痕迹消除或改写（DraftProof 是 humanizer 的反面：只记录，不改写一个字）、Web UI、知网/维普 API 对接或自动申诉。
+明确不在当前版本的方向：编辑器插件（文件夹级 watch 已覆盖任何编辑器）、云端备份 / RFC 3161 远程时间戳 / 区块链锚定（未发表草稿不许上云）、AI 痕迹消除或改写（DraftProof 是 humanizer 的反面：只记录，不改写一个字）、Web UI、知网/维普 API 对接或自动申诉。
 
-## <img src="assets/icons/file-text.svg" width="22" alt=""> 申诉材料包（m3 预览）
+## <img src="assets/icons/file-text.svg" width="22" alt=""> 申诉材料包（草稿）
 
-回执是证据，递交申诉仍是人的动作。中文申诉材料模板与 provenance Agent Skill 正在 m3 里程碑开发中，当前仓库内为**草稿预览**，未在国产模型 agent 宿主上验证：
+回执是证据，递交申诉仍是人的动作。中文申诉材料模板与 provenance Agent Skill 仍在打磨中，当前仓库内为**草稿**，尚未在国产模型 agent 宿主上验证：
 
 - [skill/SKILL.md](skill/SKILL.md) — humanizer 同格式的 provenance Agent Skill（草稿）
 - [docs/appeal_kit_zh.md](docs/appeal_kit_zh.md) — 回执如何附进申诉信的中文模板（草稿）
@@ -186,17 +186,17 @@ FAIL 检测到篡改
 | 方案 | 对象 | 价格 | 内容 |
 | --- | --- | --- | --- |
 | 作者端 CLI（本仓库） | 被误判的论文作者 | 免费 · MIT | init / watch / log / export / verify 全功能 |
-| 院校版验签工作站（v0.2+） | 学位办 / 院系 | ¥19,800 / 院系 / 年 | 气隙部署、批量验签 .dpb、回执归档检索、复核意见单模板输出，数据不出校 |
-| 期刊编辑部版（v0.2+） | 期刊编辑部 | ¥6,800 / 单刊 / 年 | 同上，按单刊授权 |
+| 院校版验签工作站（未发布） | 学位办 / 院系 | ¥19,800 / 院系 / 年 | 气隙部署、批量验签 .dpb、回执归档检索、复核意见单模板输出，数据不出校 |
+| 期刊编辑部版（未发布） | 期刊编辑部 | ¥6,800 / 单刊 / 年 | 同上，按单刊授权 |
 | 首家试点 | 访谈院校 | ¥9,800 一次性 | 换落地案例与联合署名 |
 
-工作站采用离线 license 文件 + 对公转账 + 增值税发票（非 SaaS 计费），起步无需云计费栈。v0.1 阶段（当前）工作站尚未发布；如果你在学位办或期刊编辑部、正被 AIGC 检测争议困扰，欢迎开 issue 联系——第一批试点用户将参与定义复核意见单的格式。
+工作站采用离线 license 文件 + 对公转账 + 增值税发票（非 SaaS 计费），起步无需云计费栈。工作站**尚未发布**；如果你在学位办或期刊编辑部、正被 AIGC 检测争议困扰，欢迎开 issue 联系——第一批试点用户将参与定义复核意见单的格式。
 
 ## <img src="assets/icons/route.svg" width="22" alt=""> 路线图
 
-- **v0.1（当前，m1+m2 完成）**：init 密钥与密钥卡、watch 签名快照捕获、log 写作时间线、export `.dpb` + 可打印 HTML 回执、verify 离线复核与断点定位；篡改即翻红演示已录制。
-- **v0.1.x（m3，进行中）**：provenance Agent Skill 在国产模型宿主（Qwen/GLM/DeepSeek 生态）上的验证与打磨、中文申诉材料包定稿、Gitee 镜像。
-- **v0.2+**：院校版离线验签工作站（批量验签、归档检索、复核意见单、气隙部署）。
+- **v0.3.0（当前）**：init 密钥与密钥卡、watch 签名快照捕获、log 写作时间线、export `.dpb` + 可打印 HTML 回执、verify 离线复核与断点定位。本版加固回执层：verify 由快照重算文档范围与统计（空回执、自相矛盾的回执一律 FAIL），export 在签名前校验整条哈希链、拒绝导出注定无法通过 verify 的回执，`--since` 子链的范围标注与字节增量口径如实。篡改即翻红演示已录制。
+- **v0.2.0**：修复 watch 关闭时丢弃防抖窗口内的最后一次保存、init 拒绝静默重造损坏的作者密钥（保护预登记指纹）；双语产品站上线。
+- **尚未发布**：院校版离线验签工作站（批量验签、归档检索、复核意见单、气隙部署）——裁决侧商业化方向，仍不在本仓库范围。
 - **长期评估中**：RFC 3161 远程时间戳锚定（仅在「不上传草稿内容、只锚定哈希」的前提下）。
 
 ## <img src="assets/icons/license.svg" width="22" alt=""> 许可证

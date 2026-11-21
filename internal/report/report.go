@@ -19,8 +19,8 @@ import (
 	htmltemplate "html/template"
 	"io"
 	"os"
-	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/SuperMarioYL/draftproof/internal/chain"
@@ -103,10 +103,48 @@ func (r *Receipt) signedPayload() ([]byte, error) {
 	})
 }
 
+// baselineRule selects how the first snapshot of a run is counted.
+type baselineRule int
+
+const (
+	// baselineOnlyAtGenesis credits the first snapshot's size only when the run
+	// starts at the document's genesis record: there the first snapshot really is
+	// the first save, so its bytes were added. A run selected by --since starts
+	// mid-chain, and its first snapshot is a baseline, not an increment.
+	baselineOnlyAtGenesis baselineRule = iota
+	// baselineFirstSnapshot is the v0.2.0 accounting, which always credited the
+	// first snapshot. Receipts signed by v0.2.0 (receipt schema @1) are long-lived
+	// appeal evidence; the verifier recomputes them with this rule too so they are
+	// not reported as tampered.
+	baselineFirstSnapshot
+)
+
+// startsAtGenesis reports whether a run begins at the document's first snapshot.
+func startsAtGenesis(snapshots []chain.Snapshot) bool {
+	return len(snapshots) > 0 && snapshots[0].Seq == 1 && snapshots[0].PrevHash == chain.GenesisPrevHash
+}
+
+// snapshotDelta is the byte change one snapshot represents inside a run. The
+// first snapshot of a run that does not start at genesis is a baseline (unknown
+// increment, counted as 0).
+func snapshotDelta(snapshots []chain.Snapshot, i int) int64 {
+	if i > 0 {
+		return snapshots[i].Size - snapshots[i-1].Size
+	}
+	if startsAtGenesis(snapshots) {
+		return snapshots[0].Size
+	}
+	return 0
+}
+
 // AnalyzeSessions splits snapshots into writing sessions: a new session
 // starts on a monotonic-clock reset (new watcher run) or an idle gap longer
 // than SessionGap.
 func AnalyzeSessions(snapshots []chain.Snapshot) []Session {
+	return analyzeSessions(snapshots, baselineOnlyAtGenesis)
+}
+
+func analyzeSessions(snapshots []chain.Snapshot, rule baselineRule) []Session {
 	var sessions []Session
 	for i, s := range snapshots {
 		newSession := i == 0
@@ -122,12 +160,10 @@ func AnalyzeSessions(snapshots []chain.Snapshot) []Session {
 		cur := &sessions[len(sessions)-1]
 		cur.End = s.SavedAt
 		cur.Snapshots++
-		if i == 0 {
+		if i == 0 && rule == baselineFirstSnapshot {
 			cur.BytesAdded += s.Size
-		} else {
-			if d := s.Size - snapshots[i-1].Size; d > 0 {
-				cur.BytesAdded += d
-			}
+		} else if d := snapshotDelta(snapshots, i); d > 0 {
+			cur.BytesAdded += d
 		}
 	}
 	return sessions
@@ -159,13 +195,19 @@ func ComputeStats(snapshots []chain.Snapshot, sessions []Session) Stats {
 // sinceFilter, when non-zero, keeps the contiguous run of snapshots saved at
 // or after that moment (the cut always happens at a chain position, so the
 // exported sub-chain stays verifiable).
+//
+// The selected run is chain-validated before signing: a receipt is signed
+// evidence, so exporting a store whose log lost, reordered or edited a record
+// would hand the reviewer an artifact that can never pass. cut == 0 means the
+// export keeps the document's whole chain (no filter, or a filter not later
+// than the first save) and is therefore validated — and labelled — as a full
+// chain.
 func BuildReceipt(snapshots []chain.Snapshot, keys *chain.AuthorKeys, sinceFilter time.Time, sinceLabel string) (*Receipt, error) {
 	if len(snapshots) == 0 {
 		return nil, errors.New("没有可导出的快照")
 	}
-	selected := snapshots
+	cut := 0
 	if !sinceFilter.IsZero() {
-		cut := 0
 		for i, s := range snapshots {
 			if !s.SavedAt.Before(sinceFilter) {
 				cut = i
@@ -173,11 +215,12 @@ func BuildReceipt(snapshots []chain.Snapshot, keys *chain.AuthorKeys, sinceFilte
 			}
 			cut = i + 1
 		}
-		selected = snapshots[cut:]
-		if len(selected) == 0 {
-			return nil, fmt.Errorf("--since %s 之后没有快照", sinceLabel)
-		}
 	}
+	selected := snapshots[cut:]
+	if len(selected) == 0 {
+		return nil, fmt.Errorf("--since %s 之后没有快照", sinceLabel)
+	}
+	fullChain := cut == 0
 	docID := selected[0].DocID
 	for _, s := range selected {
 		if s.DocID != docID {
@@ -192,13 +235,28 @@ func BuildReceipt(snapshots []chain.Snapshot, keys *chain.AuthorKeys, sinceFilte
 			return nil, fmt.Errorf("快照 seq %d 不是由当前密钥签名（%w）——请用原密钥导出", s.Seq, err)
 		}
 	}
+	if problems := chain.ValidateChain(selected, keys.Public, fullChain); len(problems) > 0 {
+		reasons := make([]string, len(problems))
+		for i, p := range problems {
+			reasons[i] = p.String()
+		}
+		return nil, fmt.Errorf("链结构校验失败（%d 处），拒绝导出一份必然无法通过 verify 的回执：%s",
+			len(problems), strings.Join(reasons, "；"))
+	}
+	// A filter that excludes nothing is a full-chain export; only a run that
+	// actually starts mid-chain is labelled a sub-chain, so verify keeps the
+	// genesis check for complete exports.
+	since := ""
+	if !fullChain {
+		since = sinceLabel
+	}
 	sessions := AnalyzeSessions(selected)
 	r := &Receipt{
 		Schema:     ReceiptSchema,
 		Doc:        DocInfo{ID: docID, Path: selected[0].Path, FirstSavedAt: selected[0].SavedAt, LastSavedAt: selected[len(selected)-1].SavedAt, SnapshotCount: len(selected)},
 		Author:     AuthorInfo{PublicKey: hex.EncodeToString(keys.Public), Fingerprint: chain.Fingerprint(keys.Public)},
 		ExportedAt: time.Now(),
-		Since:      sinceLabel,
+		Since:      since,
 		Snapshots:  selected,
 		Sessions:   sessions,
 		Stats:      ComputeStats(selected, sessions),
@@ -217,6 +275,7 @@ type Result struct {
 	SchemaOK         bool
 	FingerprintOK    bool
 	ReceiptSigOK     bool
+	DocConsistent    bool
 	StatsConsistent  bool
 	FullChain        bool
 	SnapshotCount    int
@@ -228,10 +287,15 @@ type Result struct {
 
 // VerifyReceipt re-checks everything a reviewer can check offline: schema,
 // key fingerprint, the envelope signature, every snapshot signature, the
-// hash-chain links, seq contiguity, and that the claimed session/stat
-// numbers match what the snapshots themselves say.
+// hash-chain links, seq contiguity, that the claimed doc block follows from
+// the snapshots, and that the claimed session/stat numbers match what the
+// snapshots themselves say.
 func VerifyReceipt(r *Receipt) Result {
-	res := Result{OK: false, SnapshotCount: len(r.Snapshots), ChainLinks: len(r.Snapshots) - 1, FullChain: r.Since == ""}
+	n := len(r.Snapshots)
+	res := Result{OK: false, SnapshotCount: n, ChainLinks: 0, FullChain: r.Since == ""}
+	if n > 0 {
+		res.ChainLinks = n - 1
+	}
 
 	res.SchemaOK = r.Schema == ReceiptSchema
 	if !res.SchemaOK {
@@ -267,18 +331,59 @@ func VerifyReceipt(r *Receipt) Result {
 	res.ChainProblems = chain.ValidateChain(r.Snapshots, pubKey, res.FullChain)
 	res.Warnings = chain.ClockRollbacks(r.Snapshots)
 
+	// The envelope signature protects fields against third-party edits, but the
+	// author is the party being checked: the doc block must follow from the
+	// evidence it encloses, and a receipt with no evidence cannot be a PASS.
+	res.DocConsistent = docMatchesSnapshots(r)
+	if !res.DocConsistent {
+		res.EnvelopeProblems = append(res.EnvelopeProblems,
+			"回执的文件字段（快照数/起止时间/文档 id/路径）与包内快照不一致——声明范围缺乏证据支持")
+	}
+
 	// The envelope signature already covers stats, but recomputing them from
 	// the snapshots also catches malformed receipts produced by buggy tools.
 	recomputed := ComputeStats(r.Snapshots, AnalyzeSessions(r.Snapshots))
-	res.StatsConsistent = reflect.DeepEqual(recomputed, r.Stats)
+	res.StatsConsistent = statsEqual(recomputed, r.Stats)
+	if !res.StatsConsistent {
+		// v0.2.0 credited the first snapshot of a --since export; those receipts
+		// are already in the wild and must not be reported as tampered.
+		legacy := ComputeStats(r.Snapshots, analyzeSessions(r.Snapshots, baselineFirstSnapshot))
+		res.StatsConsistent = statsEqual(legacy, r.Stats)
+	}
 	if !res.StatsConsistent {
 		res.EnvelopeProblems = append(res.EnvelopeProblems,
 			"会话/统计数字与快照本身不符——统计字段被改动")
 	}
 
 	res.OK = res.SchemaOK && res.FingerprintOK && res.ReceiptSigOK &&
-		res.StatsConsistent && len(res.ChainProblems) == 0 && len(res.EnvelopeProblems) == 0
+		res.DocConsistent && res.StatsConsistent &&
+		len(res.ChainProblems) == 0 && len(res.EnvelopeProblems) == 0
 	return res
+}
+
+// docMatchesSnapshots reports whether the receipt's doc block is exactly what
+// the enclosed snapshots imply.
+func docMatchesSnapshots(r *Receipt) bool {
+	n := len(r.Snapshots)
+	if n == 0 || r.Doc.ID == "" || r.Doc.Path == "" {
+		return false
+	}
+	first, last := r.Snapshots[0], r.Snapshots[n-1]
+	return r.Doc.ID == first.DocID &&
+		r.Doc.Path == first.Path &&
+		r.Doc.SnapshotCount == n &&
+		r.Doc.FirstSavedAt.Equal(first.SavedAt) &&
+		r.Doc.LastSavedAt.Equal(last.SavedAt)
+}
+
+func statsEqual(a, b Stats) bool {
+	return a.SnapshotCount == b.SnapshotCount &&
+		a.FirstSavedAt.Equal(b.FirstSavedAt) &&
+		a.LastSavedAt.Equal(b.LastSavedAt) &&
+		a.SpanHours == b.SpanHours &&
+		a.SessionCount == b.SessionCount &&
+		a.TotalBytesAdded == b.TotalBytesAdded &&
+		a.MaxGapHours == b.MaxGapHours
 }
 
 // LoadReceipt parses a .dpb file.
@@ -404,11 +509,11 @@ func RenderHTML(w io.Writer, r *Receipt, toolVersion string) error {
 			Duration: fmtDuration(sess.End.Sub(sess.Start)), Snapshots: sess.Snapshots, BytesAdded: FmtBytes(sess.BytesAdded),
 		})
 	}
-	prevSize := int64(0)
+	genesis := startsAtGenesis(r.Snapshots)
 	for i, s := range r.Snapshots {
-		delta := s.Size
-		if i > 0 {
-			delta = s.Size - prevSize
+		delta := "—" // a sub-chain's first snapshot is a baseline, not an increment
+		if i > 0 || genesis {
+			delta = signedBytes(snapshotDelta(r.Snapshots, i))
 		}
 		prevDisplay := shortHash(s.PrevHash)
 		if s.PrevHash == chain.GenesisPrevHash {
@@ -416,10 +521,9 @@ func RenderHTML(w io.Writer, r *Receipt, toolVersion string) error {
 		}
 		v.Snapshots = append(v.Snapshots, snapshotRow{
 			Seq: s.Seq, SavedAt: s.SavedAt.Format("01-02 15:04:05"),
-			Size: FmtBytes(s.Size), Delta: signedBytes(delta),
+			Size: FmtBytes(s.Size), Delta: delta,
 			ContentHash: shortHash(s.ContentHash), PrevHash: prevDisplay,
 		})
-		prevSize = s.Size
 	}
 	v.Chart = buildChart(r.Snapshots)
 	return tmpl.Execute(w, v)
@@ -459,21 +563,14 @@ func buildChart(snapshots []chain.Snapshot) incrementChart {
 	pad, base := 34.0, float64(chartH-28)
 	slot := (float64(chartW) - 2*pad) / float64(n)
 	maxDelta := int64(1)
-	for i, s := range snapshots {
-		d := s.Size
-		if i > 0 {
-			d = s.Size - snapshots[i-1].Size
-		}
-		if d > maxDelta {
+	for i := range snapshots {
+		if d := snapshotDelta(snapshots, i); d > maxDelta {
 			maxDelta = d
 		}
 	}
 	c.MaxDelta = maxDelta
-	for i, s := range snapshots {
-		d := s.Size
-		if i > 0 {
-			d = s.Size - snapshots[i-1].Size
-		}
+	for i := range snapshots {
+		d := snapshotDelta(snapshots, i)
 		h := (float64(d) / float64(maxDelta)) * (base - 14)
 		if h < 1 && d >= 0 {
 			h = 1

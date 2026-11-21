@@ -1,16 +1,16 @@
 ---
 name: draftproof
 description: 本地签名的写作过程存证（provenance）。在写作会话中记录每次保存的 ed25519 签名哈希链快照，被 AIGC 检测误判时导出可离线验签的回执。与「消除 AI 痕迹」类 skill 相反：只如实记录，不改写一个字，AI 协作的段落会被诚实标记。
-version: 0.2.0-draft
+version: 0.3.0-draft
 license: MIT
 ---
 
 # DraftProof — provenance Agent Skill（草稿）
 
-> **状态：m3 里程碑草稿（v0.1 预览）。**
-> 本文件描述的 CLI 能力（init / watch / log / export / verify）已在 v0.1 完整实现并通过测试；
+> **状态：CLI 已发布 v0.3.0，Skill 封装仍待宿主验证。**
+> 本文件描述的 CLI 能力（init / watch / log / export / verify）已在 v0.3.0 实现并通过测试；
 > 但本 Skill 封装**尚未**在国产模型 agent 宿主（Qwen / GLM / DeepSeek 生态）上安装验证，
-> 交互协议以 CLI 为准。宿主验证与定稿在 m3 里程碑（v0.1.x）完成。
+> 交互协议以 CLI 为准。宿主验证完成前，请把本文件当作 CLI 使用说明。
 
 ## 这是什么
 
@@ -62,11 +62,11 @@ draftproof verify <receipt-*.dpb>
 
 - 本地时间戳防不了「换钥匙整链重造」→ 密钥卡指纹要在**写作前**预登记（发导师留档）；
 - PASS ≠ 没用 AI；FAIL = 包内容在导出后被改动过；
-- docx 按字节哈希、不解析内部；v0.1 不提供逐版可读 diff；
+- docx 按字节哈希、不解析内部；当前版本不提供逐版可读 diff；
 - 未发表草稿不上云：无云端备份、无远程时间戳、无区块链锚定（RFC 3161 仅在「只锚哈希」前提下评估中）。
 
 ## 已知限制
 
-- v0.1 仅单机单作者；多设备/团队签名在路线图外；
+- 当前版本仅单机单作者；多设备/团队签名在路线图外；
 - `watch` 只追踪 `.docx/.md/.tex`（不区分大小写），忽略 `~$` 锁文件与 `.tmp`；
 - 演示脚本 `examples/demo-tamper-reject.py` 可在隔离 HOME 下完整复现「篡改即翻红」。

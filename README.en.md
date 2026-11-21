@@ -9,7 +9,7 @@
 **Locally signed writing-process provenance: every save joins an ed25519 hash chain, so when an AIGC detector flags your paper, you hand over a receipt that can be verified offline.**
 
 [![CI](https://github.com/SuperMarioYL/draftproof/actions/workflows/ci.yml/badge.svg)](https://github.com/SuperMarioYL/draftproof/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.2.0-A149C5)](https://github.com/SuperMarioYL/draftproof/releases)
+[![Version](https://img.shields.io/badge/version-0.3.0-A149C5)](https://github.com/SuperMarioYL/draftproof/releases)
 [![Go](https://img.shields.io/badge/go-1.24%2B-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-A149C5)](./LICENSE)
 [![Platform](https://img.shields.io/badge/platform-win%20%7C%20macOS%20%7C%20linux-7d8590)](https://github.com/SuperMarioYL/draftproof/releases)
@@ -39,7 +39,7 @@ DraftProof fills the missing layer in between: **provenance**.
 - **On flag day**: `draftproof export` produces a `receipt-*.dpb` bundle plus a one-page printable writing timeline in HTML.
 - **Reviewer side**: the degree office or editorial office runs `draftproof verify` offline with the same single binary — PASS means the chain is intact; edit one snapshot, one timestamp, even one hash character, and it flips to FAIL with the breakpoint named.
 
-Stated honestly: a receipt proves the **process existed and was not altered after export** — it does not prove "no AI was used". AI-assisted sessions are meant to be labeled as such in skill mode (see the [appeal kit preview](#-appeal-kit-m3-preview)). A forensics tool must be free to be credible: the author-side CLI and receipts are free forever; monetization lives on the adjudication side (see [Pricing](#-pricing)).
+Stated honestly: a receipt proves the **process existed and was not altered after export** — it does not prove "no AI was used". AI-assisted sessions are meant to be labeled as such in skill mode (see the [appeal kit](#-appeal-kit-draft)). A forensics tool must be free to be credible: the author-side CLI and receipts are free forever; monetization lives on the adjudication side (see [Pricing](#-pricing)).
 
 ## <img src="assets/icons/schema.svg" width="22" alt=""> Architecture
 
@@ -81,7 +81,7 @@ draftproof export ~/thesis   # on flag day: emit .dpb + printable HTML
 draftproof verify receipt-*.dpb   # reviewer side: offline, no install, no network
 ```
 
-Those five commands are the entire v0.1 interface. `examples/demo-tamper-reject.py` creates its own sample thesis (`thesis.md`, four saves), so you need no input of your own.
+Those five commands are the entire current interface. `examples/demo-tamper-reject.py` creates its own sample thesis (`thesis.md`, four saves), so you need no input of your own.
 
 ## <img src="assets/icons/video.svg" width="22" alt=""> Recorded demo
 
@@ -160,8 +160,8 @@ Design trade-offs stated in the product, not buried in an FAQ:
 
 - **Local timestamps cannot stop a "new key, rebuilt chain" forgery** — which is exactly why `init` prints a key card and asks you to send the fingerprint to an advisor before writing. A receipt whose fingerprint does not match the pre-registered card is worthless as evidence.
 - **PASS does not mean "no AI"** — the receipt proves the process existed and was not altered; AI-assisted sessions are meant to be labeled honestly, giving reviewers a more trustworthy input, not a laundering tool.
-- **docx and other compressed containers are byte-hashed, not parsed** — readable per-version diffs for .md/.tex drafts are out of scope for v0.1.
-- **Single machine, single author**: multi-device sync, team signing, mobile apps and browser extensions are all out of scope for v0.1.
+- **docx and other compressed containers are byte-hashed, not parsed** — readable per-version diffs for .md/.tex drafts are out of scope for the current version.
+- **Single machine, single author**: multi-device sync, team signing, mobile apps and browser extensions are all out of scope for the current version.
 
 <picture>
   <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="assets/presentation/integrations-mobile-dark.svg">
@@ -170,11 +170,11 @@ Design trade-offs stated in the product, not buried in an FAQ:
   <img src="assets/presentation/integrations-light.svg" width="960" alt="The byte-hash snapshot chain sits at the center, ringed by editors (Word/WPS/Typora/VS Code), formats (docx/md/tex), commands (init/watch/log/export/verify), artifacts (.dpb/receipt.html/key card) and the boundary (local only, no cloud; RFC 3161 is roadmap).">
 </picture>
 
-Explicitly out of scope for v0.1: editor plugins (directory-level watch already covers every editor), cloud backup / RFC 3161 remote timestamps / blockchain anchoring (unpublished drafts must not go to the cloud), AI-trace removal or rewriting (DraftProof is humanizer's opposite: record only, never rewrite a word), Web UI, detector-API integrations or automated appeals.
+Explicitly out of scope for the current version: editor plugins (directory-level watch already covers every editor), cloud backup / RFC 3161 remote timestamps / blockchain anchoring (unpublished drafts must not go to the cloud), AI-trace removal or rewriting (DraftProof is humanizer's opposite: record only, never rewrite a word), Web UI, detector-API integrations or automated appeals.
 
-## <img src="assets/icons/file-text.svg" width="22" alt=""> Appeal kit (m3 preview)
+## <img src="assets/icons/file-text.svg" width="22" alt=""> Appeal kit (draft)
 
-A receipt is evidence; filing the appeal is still a human act. The Chinese appeal-letter template and the provenance Agent Skill are under development for the m3 milestone; what ships in this repo today is a **draft preview**, not yet verified on Chinese-model agent hosts:
+A receipt is evidence; filing the appeal is still a human act. The Chinese appeal-letter template and the provenance Agent Skill are still being refined; what ships in this repo today is a **draft**, not yet verified on Chinese-model agent hosts:
 
 - [skill/SKILL.md](skill/SKILL.md) — the provenance Agent Skill in humanizer's own skill format (draft)
 - [docs/appeal_kit_zh.md](docs/appeal_kit_zh.md) — the Chinese template for attaching receipts to an appeal letter (draft, in Chinese)
@@ -186,17 +186,17 @@ The author-side CLI, receipt generation and verification are **free forever (MIT
 | Plan | Audience | Price | Contents |
 | --- | --- | --- | --- |
 | Author CLI (this repo) | Flagged thesis authors | Free · MIT | Full init / watch / log / export / verify |
-| Institutional verification workstation (v0.2+) | Degree offices / departments | ¥19,800 / department / year | Air-gapped deployment, batch .dpb verification, receipt archive and search, review-memo templates; data never leaves campus |
-| Journal editorial edition (v0.2+) | Journal editors | ¥6,800 / journal / year | Same, licensed per journal |
+| Institutional verification workstation (unreleased) | Degree offices / departments | ¥19,800 / department / year | Air-gapped deployment, batch .dpb verification, receipt archive and search, review-memo templates; data never leaves campus |
+| Journal editorial edition (unreleased) | Journal editors | ¥6,800 / journal / year | Same, licensed per journal |
 | First pilot | Interviewed institutions | ¥9,800 one-off | In exchange for a deployment case study and co-branding |
 
-The workstation ships as an offline license file with bank transfer and VAT invoicing (no SaaS billing stack needed at the start). It is **not yet released** at v0.1; if you work at a degree office or journal editorial office wrestling with AIGC-detection disputes, open an issue — pilot users will help define the review-memo format.
+The workstation ships as an offline license file with bank transfer and VAT invoicing (no SaaS billing stack needed at the start). It is **not yet released**; if you work at a degree office or journal editorial office wrestling with AIGC-detection disputes, open an issue — pilot users will help define the review-memo format.
 
 ## <img src="assets/icons/route.svg" width="22" alt=""> Roadmap
 
-- **v0.1 (current, m1+m2 done)**: init keys and key card; watch capturing signed snapshots; log writing timeline; export `.dpb` + printable HTML receipt; verify with offline breakpoint localization; the tamper-reject demo recorded.
-- **v0.1.x (m3, in progress)**: provenance Agent Skill verified and polished on Chinese-model agent hosts (Qwen / GLM / DeepSeek ecosystems); finalized Chinese appeal kit; Gitee mirror.
-- **v0.2+**: the offline institutional verification workstation (batch verification, archive and search, review memos, air-gapped deployment).
+- **v0.3.0 (current)**: init keys and key card; watch capturing signed snapshots; log writing timeline; export `.dpb` + printable HTML receipt; verify with offline breakpoint localization. This release hardens the receipt layer: verify re-derives the document range and stats from the snapshots (empty or self-contradictory receipts now FAIL), export validates the whole hash chain before signing and refuses to emit a receipt that verify is bound to reject, and `--since` sub-chains are labelled and byte-accounted truthfully. The tamper-reject demo is recorded.
+- **v0.2.0**: fixed the last debounced save being dropped on watch shutdown and init silently replacing a corrupt author key (protecting the pre-registered fingerprint); bilingual product site launched.
+- **Not yet released**: the offline institutional verification workstation (batch verification, archive and search, review memos, air-gapped deployment) — the adjudication-side commercial direction, still outside this repository.
 - **Under long-term evaluation**: RFC 3161 remote timestamp anchoring (only on the premise of anchoring hashes, never draft content).
 
 ## <img src="assets/icons/license.svg" width="22" alt=""> License
